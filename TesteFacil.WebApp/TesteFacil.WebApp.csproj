@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -22,6 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TesteFacil.Aplicacao\TesteFacil.Aplicacao.csproj" />
+    <ProjectReference Include="..\TesteFacil.Dominio\TesteFacil.Dominio.csproj" />
     <ProjectReference Include="..\TesteFacil.Infraestrutura.Orm\TesteFacil.Infraestrutura.Orm.csproj" />
   </ItemGroup>
 
