@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.Extensions.Logging;
+using TesteFacil.Aplicacao.Compartilhado;
 using TesteFacil.Dominio.Compartilhado;
 using TesteFacil.Dominio.ModuloDisciplina;
 using TesteFacil.Dominio.ModuloMateria;
@@ -103,16 +104,29 @@ public class DisciplinaAppService
             var materias = repositorioMateria.SelecionarRegistros();
 
             if (materias.Any(m => m.Disciplina.Id.Equals(id)))
-                return Result.Fail("A disciplina não pode ser excluída pois está em uma ou mais matérias ativas.");
+            {
+                var erro = ResultadosErro
+                    .ExclusaoBloqueadaErro("A disciplina não pôde ser excluída pois está em uma ou mais matérias ativas.");
+
+                return Result.Fail(erro);
+            }
 
             var testes = repositorioTeste.SelecionarRegistros();
 
             if (testes.Any(t => t.Disciplina.Id.Equals(id)))
-                return Result.Fail("A disciplina não pode ser excluída pois está em um ou mais testes ativos.");
+            {
+                var erro = ResultadosErro
+                    .ExclusaoBloqueadaErro("A disciplina não pôde ser excluída pois está em um ou mais testes ativos.");
+
+                return Result.Fail(erro);
+            }
 
             repositorioDisciplina.Excluir(id);
 
             unitOfWork.Commit();
+
+            return Result.Ok();
+
         }
         catch (Exception ex)
         {
@@ -123,9 +137,9 @@ public class DisciplinaAppService
                 "Ocorreu um erro durante a exclusão do registro {Id}.",
                 id
             );
-        }
 
-        return Result.Ok();
+            return Result.Fail(ResultadosErro.ExcecaoInternaErro(ex));
+        }
     }
 
     public Result<List<Disciplina>> SelecionarTodos()
