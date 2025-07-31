@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using TesteFacil.Aplicacao.ModuloDisciplina;
 using TesteFacil.Dominio.Compartilhado;
 using TesteFacil.Dominio.ModuloDisciplina;
@@ -9,9 +10,9 @@ namespace TesteFacil.WebApp.Controllers;
 [Route("disciplinas")]
 public class DisciplinaController : Controller
 {
-    private readonly DisciplinaService disciplinaService;
+    private readonly DisciplinaAppService disciplinaService;
 
-    public DisciplinaController(DisciplinaService disciplinaService)
+    public DisciplinaController(DisciplinaAppService disciplinaService)
     {
         this.disciplinaService = disciplinaService;
     }
@@ -27,6 +28,15 @@ public class DisciplinaController : Controller
         var registros = resultado.Value;
 
         var visualizarVM = new VisualizarDisciplinasViewModel(registros);
+
+        var existeNotificacao = TempData.TryGetValue(nameof(NotificacaoViewModel), out var valor);
+
+        if (existeNotificacao && valor is string jsonStrnig)
+        {
+            var notificacaoVM =  JsonSerializer.Deserialize<NotificacaoViewModel>(jsonStrnig);
+
+            ViewData.Add(nameof(NotificacaoViewModel), notificacaoVM);
+        }
 
         return View(visualizarVM);
     }
@@ -49,7 +59,14 @@ public class DisciplinaController : Controller
 
         if (resultado.IsFailed)
         {
-            ModelState.AddModelError("CadastriUnico", resultado.Errors[0].Message);
+            foreach (var erro in resultado.Errors)
+            {
+                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
+                {
+                    ModelState.AddModelError("CadastroUnico", erro.Reasons[0].Message);
+                    break;
+                }
+            }
 
             return View(cadastrarVM);
         }
@@ -57,6 +74,25 @@ public class DisciplinaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    /*
+    [HttpPost("cadastrar")]
+    [ValidateAntiForgeryToken]
+    public IActionResult Cadastrar(CadastrarDisciplinaViewModel cadastrarVM)
+    {
+        var entidade = FormularioDisciplinaViewModel.ParaEntidade(cadastrarVM);
+
+        var resultado = disciplinaService.Cadastrar(entidade);
+
+        if (resultado.IsFailed)
+        {
+            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
+
+            return View(cadastrarVM);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+    */
     [HttpGet("editar/{id:guid}")]
     public ActionResult Editar(Guid id)
     {
@@ -115,7 +151,17 @@ public class DisciplinaController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ExcluirConfirmado(Guid id)
     {
-        disciplinaService.Excluir(id);
+        var resultado = disciplinaService.Excluir(id);
+
+        if (resultado.IsFailed)
+        {
+            var notificacaoJson =  NotificacaoViewModel.GerarNotificacaoSerializada(
+                "Error ao excluir registro",
+                resultado.Errors[0].Message
+                );
+
+            TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+        }
 
         return RedirectToAction(nameof(Index));
     }
