@@ -18,7 +18,7 @@ public abstract class FormularioQuestaoViewModel
 
     [MinLength(2, ErrorMessage = "O campo \"Alternativas\" precisa conter ao menos 2 itens.")]
     public List<AlternativaQuestaoViewModel> AlternativasSelecionadas { get; set; } = new List<AlternativaQuestaoViewModel>();
-    
+
     public void AdicionarAlternativa(AdicionarAlternativaQuestaoViewModel alternativaVm)
     {
         var letraAlternativa = (char)('a' + AlternativasSelecionadas?.Count ?? 0);
@@ -157,6 +157,11 @@ public class DetalhesQuestaoViewModel
     public string RespostaCorreta { get; set; }
     public List<AlternativaQuestaoViewModel> Alternativas { get; set; }
 
+    public DetalhesQuestaoViewModel()
+    {
+        Alternativas = new List<AlternativaQuestaoViewModel>();
+    }
+
     public DetalhesQuestaoViewModel(
         Guid id,
         string enunciado,
@@ -164,7 +169,7 @@ public class DetalhesQuestaoViewModel
         string utilizadaEmTeste,
         string respostaCorreta,
         List<Alternativa> alternativas
-    )
+    ) : this()
     {
         Id = id;
         Enunciado = enunciado;
@@ -217,5 +222,91 @@ public class AdicionarAlternativaQuestaoViewModel
     {
         Resposta = resposta;
         Correta = correta;
+    }
+}
+
+public class PrimeiraEtapaGerarQuestoesViewModel
+{
+    [Required(ErrorMessage = "O campo \"Matéria\" é obrigatório.")]
+    public Guid MateriaId { get; set; }
+    public List<SelectListItem> MateriasDisponiveis { get; set; } = new List<SelectListItem>();
+
+    [Required(ErrorMessage = "O campo \"Quantidade de Questões\" é obrigatório.")]
+    [Range(1, 100, ErrorMessage = "O campo \"Quantidade de Questões\" precisa conter um valor numérico entre 1 e 100.")]
+    public int QuantidadeQuestoes { get; set; }
+
+    public PrimeiraEtapaGerarQuestoesViewModel() { }
+
+    public PrimeiraEtapaGerarQuestoesViewModel(List<Materia> materias) : this()
+    {
+        MateriasDisponiveis = materias
+            .Select(m => new SelectListItem($"{m.Nome} - {m.Disciplina.Nome}", m.Id.ToString()))
+            .ToList();
+    }
+}
+
+public class SegundaEtapaGerarQuestoesViewModel
+{
+    public required Guid MateriaId { get; set; }
+    public required string Materia { get; set; }
+
+    public List<QuestaoGeradaViewModel> QuestoesGeradas { get; set; } = new List<QuestaoGeradaViewModel>();
+
+    public SegundaEtapaGerarQuestoesViewModel() { }
+
+    public SegundaEtapaGerarQuestoesViewModel(List<Questao> questoes) : this()
+    {
+        QuestoesGeradas = questoes
+            .Select(QuestaoGeradaViewModel.ParaViewModel)
+            .ToList();
+    }
+
+    public static List<Questao> ObterQuestoesGeradas(SegundaEtapaGerarQuestoesViewModel segundaEtapaVm, Materia materiaSelecionada)
+    {
+        var questoes = new List<Questao>();
+
+        foreach (var questaoVm in segundaEtapaVm.QuestoesGeradas)
+        {
+            var questao = new Questao(questaoVm.Enunciado, materiaSelecionada);
+
+            foreach (var alternativaVm in questaoVm.AlternativasGeradas)
+                questao.AdicionarAlternativa(alternativaVm.Resposta, alternativaVm.Correta);
+
+            questoes.Add(questao);
+        }
+
+        return questoes;
+    }
+}
+
+public class QuestaoGeradaViewModel
+{
+    public required string Enunciado { get; set; }
+    public required List<AlternativaQuestaoGeradaViewModel> AlternativasGeradas { get; set; } = new List<AlternativaQuestaoGeradaViewModel>();
+
+    public static QuestaoGeradaViewModel ParaViewModel(Questao questao)
+    {
+        return new QuestaoGeradaViewModel
+        {
+            Enunciado = questao.Enunciado,
+            AlternativasGeradas = questao.Alternativas
+                .Select(AlternativaQuestaoGeradaViewModel.ParaViewModel)
+                .ToList()
+        };
+    }
+}
+
+public class AlternativaQuestaoGeradaViewModel
+{
+    public required string Resposta { get; set; }
+    public required bool Correta { get; set; }
+
+    public static AlternativaQuestaoGeradaViewModel ParaViewModel(Alternativa alternativa)
+    {
+        return new AlternativaQuestaoGeradaViewModel
+        {
+            Resposta = alternativa.Resposta,
+            Correta = alternativa.Correta
+        };
     }
 }
