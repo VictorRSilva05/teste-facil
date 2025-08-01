@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using TesteFacil.Aplicacao.ModuloDisciplina;
-using TesteFacil.Dominio.Compartilhado;
-using TesteFacil.Dominio.ModuloDisciplina;
 using TesteFacil.WebApp.Models;
 
 namespace TesteFacil.WebApp.Controllers;
@@ -10,20 +8,33 @@ namespace TesteFacil.WebApp.Controllers;
 [Route("disciplinas")]
 public class DisciplinaController : Controller
 {
-    private readonly DisciplinaAppService disciplinaService;
+    private readonly DisciplinaAppService disciplinaAppService;
 
-    public DisciplinaController(DisciplinaAppService disciplinaService)
+    public DisciplinaController(DisciplinaAppService disciplinaAppService)
     {
-        this.disciplinaService = disciplinaService;
+        this.disciplinaAppService = disciplinaAppService;
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        var resultado = disciplinaService.SelecionarTodos();
+        var resultado = disciplinaAppService.SelecionarTodos();
 
         if (resultado.IsFailed)
-            return RedirectToAction("Home/Index");
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
+            return RedirectToAction("erro", "home");
+        }
 
         var registros = resultado.Value;
 
@@ -31,11 +42,11 @@ public class DisciplinaController : Controller
 
         var existeNotificacao = TempData.TryGetValue(nameof(NotificacaoViewModel), out var valor);
 
-        if (existeNotificacao && valor is string jsonStrnig)
+        if (existeNotificacao && valor is string jsonString)
         {
-            var notificacaoVM = JsonSerializer.Deserialize<NotificacaoViewModel>(jsonStrnig);
+            var notificacaoVm = JsonSerializer.Deserialize<NotificacaoViewModel>(jsonString);
 
-            ViewData.Add(nameof(NotificacaoViewModel), notificacaoVM);
+            ViewData.Add(nameof(NotificacaoViewModel), notificacaoVm);
         }
 
         return View(visualizarVM);
@@ -55,7 +66,7 @@ public class DisciplinaController : Controller
     {
         var entidade = FormularioDisciplinaViewModel.ParaEntidade(cadastrarVM);
 
-        var resultado = disciplinaService.Cadastrar(entidade);
+        var resultado = disciplinaAppService.Cadastrar(entidade);
 
         if (resultado.IsFailed)
         {
@@ -74,32 +85,26 @@ public class DisciplinaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    /*
-    [HttpPost("cadastrar")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Cadastrar(CadastrarDisciplinaViewModel cadastrarVM)
+    [HttpGet("editar/{id:guid}")]
+    public IActionResult Editar(Guid id)
     {
-        var entidade = FormularioDisciplinaViewModel.ParaEntidade(cadastrarVM);
-
-        var resultado = disciplinaService.Cadastrar(entidade);
+        var resultado = disciplinaAppService.SelecionarPorId(id);
 
         if (resultado.IsFailed)
         {
-            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-            return View(cadastrarVM);
-        }
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
 
-        return RedirectToAction(nameof(Index));
-    }
-    */
-    [HttpGet("editar/{id:guid}")]
-    public ActionResult Editar(Guid id)
-    {
-        var resultado = disciplinaService.SelecionarPorId(id);
-
-        if (resultado.IsFailed)
             return RedirectToAction(nameof(Index));
+        }
 
         var registroSelecionado = resultado.Value;
 
@@ -113,15 +118,22 @@ public class DisciplinaController : Controller
 
     [HttpPost("editar/{id:guid}")]
     [ValidateAntiForgeryToken]
-    public ActionResult Editar(Guid id, EditarDisciplinaViewModel editarVM)
+    public IActionResult Editar(Guid id, EditarDisciplinaViewModel editarVM)
     {
-        var entidadeEdita = FormularioDisciplinaViewModel.ParaEntidade(editarVM);
+        var entidadeEditada = FormularioDisciplinaViewModel.ParaEntidade(editarVM);
 
-        var resultado = disciplinaService.Editar(id, entidadeEdita);
+        var resultado = disciplinaAppService.Editar(id, entidadeEditada);
 
         if (resultado.IsFailed)
         {
-            ModelState.AddModelError("CadastriUnico", resultado.Errors[0].Message);
+            foreach (var erro in resultado.Errors)
+            {
+                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
+                {
+                    ModelState.AddModelError("CadastroUnico", erro.Reasons[0].Message);
+                    break;
+                }
+            }
 
             return View(editarVM);
         }
@@ -132,10 +144,23 @@ public class DisciplinaController : Controller
     [HttpGet("excluir/{id:guid}")]
     public IActionResult Excluir(Guid id)
     {
-        var resultado = disciplinaService.SelecionarPorId(id);
+        var resultado = disciplinaAppService.SelecionarPorId(id);
 
         if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
             return RedirectToAction(nameof(Index));
+        }
 
         var registroSelecionado = resultado.Value;
 
@@ -151,44 +176,46 @@ public class DisciplinaController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ExcluirConfirmado(Guid id)
     {
-        var resultado = disciplinaService.Excluir(id);
+        var resultado = disciplinaAppService.Excluir(id);
 
         if (resultado.IsFailed)
         {
             foreach (var erro in resultado.Errors)
             {
-                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
-                {
-                    var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
-                        erro.Message,
-                        erro.Reasons[0].Message
-                    );
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-                    TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
-
-                    break;
-                }
-                else
-                {
-                    return RedirectToAction("Home/Erro");
-                }
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
             }
         }
 
         return RedirectToAction(nameof(Index));
     }
 
-
     [HttpGet("detalhes/{id:guid}")]
     public IActionResult Detalhes(Guid id)
     {
-        var resultado = disciplinaService.SelecionarPorId(id);
+        var resultado = disciplinaAppService.SelecionarPorId(id);
 
         if (resultado.IsFailed)
-            return RedirectToAction(nameof(Index));
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-        var detalhesVM = DetalhesDisciplinaViewModel.ParaDetalhesVm(resultado.Value);
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+        }
 
-        return View(detalhesVM);
+        var detalhesVm = DetalhesDisciplinaViewModel.ParaDetalhesVm(resultado.Value);
+
+        return View(detalhesVm);
     }
 }
