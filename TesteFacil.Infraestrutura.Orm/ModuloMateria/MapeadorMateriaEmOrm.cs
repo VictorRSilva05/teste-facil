@@ -21,7 +21,7 @@ public class MapeadorMateriaEmOrm : IEntityTypeConfiguration<Materia>
             .HasConversion<int>();
 
         builder.HasOne(m => m.Disciplina)
-            .WithMany(d => d.Materias)
+            .WithMany(d => d.Materias).OnDelete(DeleteBehavior.NoAction)
             .IsRequired();
     }
 }
