@@ -98,7 +98,9 @@ public sealed class RepositorioDisciplinaEmOrmTests
 
         // Act - Ação
         var disciplinasRecebidas = repositorioDisciplina
-            .SelecionarRegistros();
+            .SelecionarRegistros()
+            .OrderBy(d => d.Nome)
+            .ToList();
 
         // Assert - Asseção
         CollectionAssert.AreEqual(disciplinasEsperadasOrdenadas, disciplinasRecebidas);
