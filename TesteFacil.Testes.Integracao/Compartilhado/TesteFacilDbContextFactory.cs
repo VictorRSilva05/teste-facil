@@ -3,9 +3,10 @@ using Microsoft.Extensions.Configuration;
 using TesteFacil.Infraestrutura.Orm.Compartilhado;
 
 namespace TesteFacil.Testes.Integracao.Compartilhado;
-public static class TesteDbContextFactory
+
+public static class TesteFacilDbContextFactory
 {
-    public static TesteFacilDbContext CriaDbContext()
+    public static TesteFacilDbContext CriarDbContext()
     {
         var configuracao = CriarConfiguracao();
 
@@ -23,9 +24,9 @@ public static class TesteDbContextFactory
         return dbContext;
     }
 
-    public static IConfiguration CriarConfiguracao()
+    private static IConfiguration CriarConfiguracao()
     {
-        var assembly = typeof(TesteDbContextFactory).Assembly;
+        var assembly = typeof(TesteFacilDbContextFactory).Assembly;
 
         return new ConfigurationBuilder()
             .AddUserSecrets(assembly)

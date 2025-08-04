@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesteFacil.Aplicacao", "Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesteFacil.Infraestrutura.Pdf", "TesteFacil.Infraestrutura.Pdf\TesteFacil.Infraestrutura.Pdf.csproj", "{2A65C4DF-70DC-49D1-8015-A7AEE47BEA8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesteFacil.Infraestructure.AI.Gemini", "TesteFacil.Infraestructure.AI.Gemini\TesteFacil.Infraestructure.AI.Gemini.csproj", "{E534AC34-D23E-42BF-BC1E-6E3EC798D425}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesteFacil.Infraestrutura.IA.Gemini", "TesteFacil.Infraestructure.AI.Gemini\TesteFacil.Infraestrutura.IA.Gemini.csproj", "{E534AC34-D23E-42BF-BC1E-6E3EC798D425}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4.Testes", "4.Testes", "{7A264298-9470-401F-826A-ECEE86760464}"
 EndProject

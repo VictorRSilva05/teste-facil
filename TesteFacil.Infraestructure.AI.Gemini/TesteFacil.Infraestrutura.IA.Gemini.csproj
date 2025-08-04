@@ -7,8 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TesteFacil.Dominio\TesteFacil.Dominio.csproj" />
-    <ProjectReference Include="..\TesteFacil.WebApp\TesteFacil.WebApp.csproj" />
   </ItemGroup>
 
 </Project>

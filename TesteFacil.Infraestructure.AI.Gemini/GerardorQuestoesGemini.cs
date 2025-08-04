@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text;
 using TesteFacil.Dominio.ModuloQuestao;
-using Microsoft.Extensions.Configuration;
 using TesteFacil.Dominio.ModuloMateria;
 using TesteFacil.Infraestrutura.IA.Gemini.DTOs;
+using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace TesteFacil.Infraestrutura.IA.Gemini;
 
