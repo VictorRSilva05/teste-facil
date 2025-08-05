@@ -31,7 +31,7 @@ public class TesteFacilDbContextFactory
 
     public TesteFacilDbContext CriarDbContext()
     {
-        var connectionString = string.Concat(container.GetConnectionString(), $"Initial Catalog=TesteFacilTestDb");
+        var connectionString = string.Concat(container.GetConnectionString(), $";Initial Catalog=TesteFacilTestDb");
 
         var options = new DbContextOptionsBuilder<TesteFacilDbContext>()
             .UseSqlServer(connectionString)
