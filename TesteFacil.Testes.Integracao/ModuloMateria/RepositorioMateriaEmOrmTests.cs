@@ -5,6 +5,7 @@ using TesteFacil.Infraestrutura.Orm.Compartilhado;
 using TesteFacil.Infraestrutura.Orm.ModuloDisciplina;
 using TesteFacil.Infraestrutura.Orm.ModuloMateria;
 using TesteFacil.Testes.Integracao.Compartilhado;
+using Testcontainers.MsSql;
 
 namespace TesteFacil.Testes.Integracao.ModuloMateria;
 
@@ -12,14 +13,29 @@ namespace TesteFacil.Testes.Integracao.ModuloMateria;
 [TestCategory("Testes de integração de Matéria")]
 public class RepositorioMateriaEmOrmTests
 {
+    private static TesteFacilDbContextFactory factory;
     private TesteFacilDbContext dbContext;
     private RepositorioDisciplinaEmOrm repositorioDisciplina;
     private RepositorioMateriaEmOrm repositorioMateria;
 
+    [AssemblyInitialize]
+    public static async Task Setup(TestContext _)
+    {
+        factory = new TesteFacilDbContextFactory();
+
+        await factory.InicializarAsync();
+    }
+
+    [AssemblyCleanup]
+    public static async Task Cleanup()
+    {
+        await factory.EncerrarAsync();
+    }
+
     [TestInitialize]
     public void ConfigurarTestes()
     {
-        dbContext = TesteFacilDbContextFactory.CriarDbContext();
+        dbContext = factory.CriarDbContext();
 
         repositorioDisciplina = new RepositorioDisciplinaEmOrm(dbContext);
         repositorioMateria = new RepositorioMateriaEmOrm(dbContext);

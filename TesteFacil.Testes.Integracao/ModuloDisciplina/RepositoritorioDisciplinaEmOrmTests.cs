@@ -1,4 +1,5 @@
-﻿using TesteFacil.Dominio.ModuloDisciplina;
+﻿using Docker.DotNet.Models;
+using TesteFacil.Dominio.ModuloDisciplina;
 using TesteFacil.Infraestrutura.Orm.Compartilhado;
 using TesteFacil.Infraestrutura.Orm.ModuloDisciplina;
 using TesteFacil.Testes.Integracao.Compartilhado;
@@ -9,13 +10,29 @@ namespace TesteFacil.Testes.Integracao.ModuloDisciplina;
 [TestCategory("Testes de Integração de Disciplina")]
 public sealed class RepositorioDisciplinaEmOrmTests
 {
+    private static TesteFacilDbContextFactory factory;
     private TesteFacilDbContext dbContext;
     private RepositorioDisciplinaEmOrm repositorioDisciplina;
+
+
+    [AssemblyInitialize]
+    public static async Task Setup(TestContext _)
+    {
+        factory = new TesteFacilDbContextFactory();
+
+        await factory.InicializarAsync();
+    }
+
+    [AssemblyCleanup]
+    public static async Task Cleanup()
+    {
+        await factory.EncerrarAsync();
+    }
 
     [TestInitialize]
     public void ConfigurarTestes()
     {
-        dbContext = TesteFacilDbContextFactory.CriarDbContext();
+        dbContext = factory.CriarDbContext();
 
         repositorioDisciplina = new RepositorioDisciplinaEmOrm(dbContext);
     }
