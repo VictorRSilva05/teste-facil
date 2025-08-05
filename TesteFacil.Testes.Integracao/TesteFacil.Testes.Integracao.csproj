@@ -16,6 +16,7 @@
     <PackageReference Include="MSTest" Version="3.6.4" />
     <PackageReference Include="NBuilder" Version="6.1.0" />
     <PackageReference Include="Testcontainers.MsSql" Version="4.6.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>

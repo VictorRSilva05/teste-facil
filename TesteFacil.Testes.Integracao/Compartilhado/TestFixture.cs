@@ -1,5 +1,12 @@
-﻿using FizzWare.NBuilder;
+﻿using DotNet.Testcontainers.Containers;
+using FizzWare.NBuilder;
+using Microsoft.EntityFrameworkCore.Storage;
+using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 using TesteFacil.Dominio.ModuloDisciplina;
+using TesteFacil.Dominio.ModuloMateria;
+using TesteFacil.Dominio.ModuloQuestao;
+using TesteFacil.Dominio.ModuloTeste;
 using TesteFacil.Infraestrutura.Orm.Compartilhado;
 using TesteFacil.Infraestrutura.Orm.ModuloDisciplina;
 using TesteFacil.Infraestrutura.Orm.ModuloMateria;
@@ -11,36 +18,54 @@ namespace TesteFacil.Testes.Integracao.Compartilhado;
 [TestClass]
 public abstract class TestFixture
 {
-    private static TesteFacilDbContextFactory? factory;
     protected TesteFacilDbContext? dbContext;
 
     protected RepositorioTesteEmOrm? repositorioTeste;
     protected RepositorioQuestaoEmOrm? repositorioQuestao;
     protected RepositorioMateriaEmOrm? repositorioMateria;
     protected RepositorioDisciplinaEmOrm? repositorioDisciplina;
+    private static IDatabaseContainer? container;
+
+    private static async Task InicializarBancoDadosAsync(IDatabaseContainer container)
+    {
+        await container.StartAsync();
+    }
+
+    private static async Task EncerrarBancoDadosAsync()
+    {
+        if (container is null)
+            throw new ArgumentNullException("O banco de dados não foi inicializado");
+
+        await container.StopAsync();
+        await container.DisposeAsync();
+    }
+
 
     [AssemblyInitialize]
     public static async Task Setup(TestContext _)
     {
-        factory = new TesteFacilDbContextFactory();
+        container = new PostgreSqlBuilder()
+         .WithImage("postgres:16")
+         .WithName("teste-facil-testdb-container")
+         .WithCleanUp(true)
+         .Build();
 
-        await factory.InicializarAsync();
+        await InicializarBancoDadosAsync(container);
     }
 
     [AssemblyCleanup]
     public static async Task Teardown()
     {
-        if (factory is not null)
-            await factory.EncerrarAsync();
+        await EncerrarBancoDadosAsync();
     }
 
     [TestInitialize]
     public void ConfigurarTestes()
     {
-        dbContext = factory?.CriarDbContext();
+        if (container is null)
+            throw new ArgumentNullException("O banco de dados não foi inicializado");
 
-        if (dbContext is null)
-            throw new ArgumentNullException("DbContextFactory não inicializada corretamente");
+        dbContext = TesteFacilDbContextFactory.CriarDbContext(container.GetConnectionString());
 
         ConfigurarTabelas(dbContext);
 
@@ -51,6 +76,15 @@ public abstract class TestFixture
 
         BuilderSetup.SetCreatePersistenceMethod<Disciplina>(repositorioDisciplina.Cadastrar);
         BuilderSetup.SetCreatePersistenceMethod<IList<Disciplina>>(repositorioDisciplina.CadastrarEntidades);
+
+        BuilderSetup.SetCreatePersistenceMethod<Materia>(repositorioMateria.Cadastrar);
+        BuilderSetup.SetCreatePersistenceMethod<IList<Materia>>(repositorioMateria.CadastrarEntidades);
+
+        BuilderSetup.SetCreatePersistenceMethod<Questao>(repositorioQuestao.Cadastrar);
+        BuilderSetup.SetCreatePersistenceMethod<IList<Questao>>(repositorioQuestao.CadastrarEntidades);
+
+        BuilderSetup.SetCreatePersistenceMethod<Teste>(repositorioTeste.Cadastrar);
+        BuilderSetup.SetCreatePersistenceMethod<IList<Teste>>(repositorioTeste.CadastrarEntidades);
     }
 
     private static void ConfigurarTabelas(TesteFacilDbContext dbContext)
