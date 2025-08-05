@@ -11,38 +11,9 @@ namespace TesteFacil.Testes.Integracao.ModuloMateria;
 
 [TestClass]
 [TestCategory("Testes de integração de Matéria")]
-public class RepositorioMateriaEmOrmTests
+public class RepositorioMateriaEmOrmTests : TestFixture
 {
-    private static TesteFacilDbContextFactory factory;
-    private TesteFacilDbContext dbContext;
-    private RepositorioDisciplinaEmOrm repositorioDisciplina;
-    private RepositorioMateriaEmOrm repositorioMateria;
-
-    [AssemblyInitialize]
-    public static async Task Setup(TestContext _)
-    {
-        factory = new TesteFacilDbContextFactory();
-
-        await factory.InicializarAsync();
-    }
-
-    [AssemblyCleanup]
-    public static async Task Cleanup()
-    {
-        await factory.EncerrarAsync();
-    }
-
-    [TestInitialize]
-    public void ConfigurarTestes()
-    {
-        dbContext = factory.CriarDbContext();
-
-        repositorioDisciplina = new RepositorioDisciplinaEmOrm(dbContext);
-        repositorioMateria = new RepositorioMateriaEmOrm(dbContext);
-
-        BuilderSetup.SetCreatePersistenceMethod<Disciplina>(repositorioDisciplina.Cadastrar);
-    }
-
+    
     [TestMethod]
     public void Deve_Cadastrar_Materia_Corretamente()
     {

@@ -8,34 +8,8 @@ namespace TesteFacil.Testes.Integracao.ModuloDisciplina;
 
 [TestClass]
 [TestCategory("Testes de Integração de Disciplina")]
-public sealed class RepositorioDisciplinaEmOrmTests
+public sealed class RepositorioDisciplinaEmOrmTests : TestFixture
 {
-    private static TesteFacilDbContextFactory factory;
-    private TesteFacilDbContext dbContext;
-    private RepositorioDisciplinaEmOrm repositorioDisciplina;
-
-
-    [AssemblyInitialize]
-    public static async Task Setup(TestContext _)
-    {
-        factory = new TesteFacilDbContextFactory();
-
-        await factory.InicializarAsync();
-    }
-
-    [AssemblyCleanup]
-    public static async Task Cleanup()
-    {
-        await factory.EncerrarAsync();
-    }
-
-    [TestInitialize]
-    public void ConfigurarTestes()
-    {
-        dbContext = factory.CriarDbContext();
-
-        repositorioDisciplina = new RepositorioDisciplinaEmOrm(dbContext);
-    }
 
     [TestMethod]
     public void Deve_Cadastrar_Disciplina_Corretamente()
