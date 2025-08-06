@@ -59,4 +59,12 @@ public class Materia : EntidadeBase<Materia>
         Serie = registroEditado.Serie;
         Disciplina = registroEditado.Disciplina;
     }
+
+    public void AdicionarQuestoes(List<Questao> questoes)
+    {
+        if (Questoes.Any(questoes.Contains))
+            return;
+
+        Questoes.AddRange(questoes);
+    }
 }
