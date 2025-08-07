@@ -12,8 +12,8 @@ using TesteFacil.Infraestrutura.Orm.Compartilhado;
 namespace TesteFacil.Infraestrutura.Orm.Migrations
 {
     [DbContext(typeof(TesteFacilDbContext))]
-    [Migration("20250722145609_Add_Initial_Config")]
-    partial class Add_Initial_Config
+    [Migration("20250807190915_Config_Inicial")]
+    partial class Config_Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -184,7 +184,7 @@ namespace TesteFacil.Infraestrutura.Orm.Migrations
                     b.HasOne("TesteFacil.Dominio.ModuloDisciplina.Disciplina", "Disciplina")
                         .WithMany("Materias")
                         .HasForeignKey("DisciplinaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Disciplina");
