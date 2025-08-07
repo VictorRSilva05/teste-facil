@@ -46,7 +46,10 @@ public abstract class TestFixture
     {
         container = new PostgreSqlBuilder()
          .WithImage("postgres:16")
-         .WithName("teste-facil-testdb-container")
+         .WithName("teste-facil-testdb")
+         .WithDatabase("AcademiaDoProgramadorDb")
+         .WithUsername("postgres")
+         .WithPassword("YourStrongPassword")
          .WithCleanUp(true)
          .Build();
 
