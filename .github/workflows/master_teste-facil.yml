@@ -74,6 +74,7 @@ jobs:
         run: dotnet ef database update --project ./TesteFacil.Infraestrutura.Orm --startup-project ./TesteFacil.WebApp
         env:
           SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING}}
+          NEWRELIC_LICENSE_KEY: ${{ secrets.NEWRELIC_LICENSE_KEY}}
         
   deploy:
     runs-on: windows-latest
