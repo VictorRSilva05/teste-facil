@@ -98,8 +98,7 @@ public class Teste : EntidadeBase<Teste>
 
     public void RemoverQuestoesAtuais()
     {
-        foreach (var questao in Questoes)
-            RemoverQuestao(questao);
+       Questoes.Clear();
     }
 
     public override void AtualizarRegistro(Teste registroEditado)
@@ -108,6 +107,7 @@ public class Teste : EntidadeBase<Teste>
         Disciplina = registroEditado.Disciplina;
         Materia = registroEditado.Materia;
         Questoes = registroEditado.Questoes;
+        Serie = registroEditado.Serie;
         Recuperacao = registroEditado.Recuperacao;
     }
 }
