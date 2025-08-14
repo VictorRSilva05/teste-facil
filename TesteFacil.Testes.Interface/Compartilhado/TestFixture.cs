@@ -32,7 +32,10 @@ public abstract class TestFixture
 
     private static void InicializarWebDriver()
     {
-        driver = new FirefoxDriver();
+        var options = new FirefoxOptions();
+        options.AddArgument("--headless");
+
+        driver = new FirefoxDriver(options);
     }
 
     private static void EncerrarWebDriver()
