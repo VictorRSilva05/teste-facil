@@ -1,14 +1,17 @@
 ﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 
 namespace TesteFacil.Testes.Interface.ModuloDisciplina;
 
 public class DisciplinaFormPageObject
 {
     private readonly IWebDriver driver;
+    private readonly WebDriverWait wait;
 
     public DisciplinaFormPageObject(IWebDriver driver)
     {
         this.driver = driver;
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
     }
 
     public DisciplinaFormPageObject PreencherNome(string nome)
@@ -47,6 +50,20 @@ public class DisciplinaIndexPageObject
     public DisciplinaFormPageObject ClickCadastrar()
     {
         driver?.FindElement(By.CssSelector("a[data-se='btnCadastrar']")).Click();
+
+        return new DisciplinaFormPageObject(driver!);
+    }
+
+    public DisciplinaFormPageObject ClickEditar()
+    {
+        driver?.FindElement(By.CssSelector(".card a[title='Edição']")).Click();
+
+        return new DisciplinaFormPageObject(driver!);
+    }
+
+    public DisciplinaFormPageObject ClickExcluir()
+    {
+        driver?.FindElement(By.CssSelector(".card a[title='Exclusão']")).Click();
 
         return new DisciplinaFormPageObject(driver!);
     }
