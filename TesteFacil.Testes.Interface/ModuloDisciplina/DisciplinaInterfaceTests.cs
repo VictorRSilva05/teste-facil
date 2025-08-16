@@ -11,22 +11,20 @@ public sealed class DisciplinaInterfaceTests : TestFixture
     [TestMethod]
     public void Deve_Cadastrar_Disciplina_Corretamente()
     {
-        // Arange
-        driver?.Navigate().GoToUrl(Path.Combine(enderecoBase, "disciplinas"));
+        // Arrange
+        var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
 
-        var elemento = driver?.FindElement(By.CssSelector("a[data-se='btnCadastrar']"));
-
-        elemento?.Click();
+        disciplinaIndex
+            .IrPara(enderecoBase);
 
         // Act
-        driver?.FindElement(By.Id("Nome")).SendKeys("Matemática");
-
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
+        disciplinaIndex
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
         // Assert
-        var elementosCard = driver?.FindElements(By.CssSelector(".card"));
-
-        Assert.AreEqual(1, elementosCard?.Count);
+        Assert.IsTrue(disciplinaIndex.ContemDisciplina("Matemática"));
     }
 
     [TestMethod]
