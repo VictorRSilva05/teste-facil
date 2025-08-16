@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using TesteFacil.Testes.Interface.Compartilhado;
+using TesteFacil.Testes.Interface.ModuloDisciplina;
 
 namespace TesteFacil.Testes.Interface.ModuloMateria;
 
@@ -11,37 +12,88 @@ public sealed class MateriaInterfaceTests : TestFixture
     [TestMethod]
     public void Deve_Cadastrar_Materia_Corretamente()
     {
-        //Arrange 
-        var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+        // Arrange
+        var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
 
-        driver.Navigate().GoToUrl(Path.Combine(enderecoBase, "disciplinas", "cadastrar"));
+        disciplinaIndex
+            .IrPara(enderecoBase)
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
-        driver?.FindElement(By.Id("Nome")).SendKeys("Matemática");
+        // Act
+        var materiaIndex = new MateriaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
 
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
+        materiaIndex
+            .ClickCadastrar()
+            .PreencherNome("Quatro Operações")
+            .SelecionarSerie("Segunda Série")
+            .SelecionarDisciplina("Matemática")
+            .Confirmar();
 
-        wait.Until(d => d.FindElements(By.CssSelector(".card")).Count == 1);
+        // Assert
+        Assert.IsTrue(materiaIndex.ContemMateria("Quatro Operações"));
+    }
 
-        driver?.Navigate().GoToUrl(Path.Combine(enderecoBase, "materias", "cadastrar"));
+    [TestMethod]
+    public void Deve_Editar_Materia_Corretamente()
+    {
+        // Arrange
+        new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase)
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
-        //Act
-        driver?.FindElement(By.Id("Nome")).SendKeys("Quatro Operações");
+        var materiaIndex = new MateriaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
 
-        var selectSerie = new SelectElement(driver?.FindElement(By.Id("Serie"))!);
+        materiaIndex
+            .ClickCadastrar()
+            .PreencherNome("Quatro Operações")
+            .SelecionarSerie("Segunda Série")
+            .SelecionarDisciplina("Matemática")
+            .Confirmar();
 
-        selectSerie.SelectByText("Segunda Série");
+        // Act
+        materiaIndex
+           .ClickEditar()
+           .PreencherNome("Quatro Operações Editada")
+           .SelecionarSerie("Primeira Série")
+           .SelecionarDisciplina("Matemática")
+           .Confirmar();
 
-        var selectDisciplina = new SelectElement(driver?.FindElement(By.Id("DisciplinaId"))!);
+        // Assert
+        Assert.IsTrue(materiaIndex.ContemMateria("Quatro Operações Editada"));
+    }
 
-        selectSerie.SelectByText("Matemática");
+    [TestMethod]
+    public void Deve_Excluir_Materia_Corretamente()
+    {
+        // Arrange
+        new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase)
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
+        var materiaIndex = new MateriaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
 
-        //Assert
-        wait.Until(d => d.FindElements(By.CssSelector(".card")).Count == 1);
+        materiaIndex
+            .ClickCadastrar()
+            .PreencherNome("Quatro Operações")
+            .SelecionarSerie("Segunda Série")
+            .SelecionarDisciplina("Matemática")
+            .Confirmar();
 
-        var elementosCard = driver?.FindElements(By.CssSelector(".card"));
+        // Act
+        materiaIndex
+            .ClickExcluir()
+            .Confirmar();
 
-        Assert.AreEqual(1, elementosCard.Count());
+        // Assert
+        Assert.IsFalse(materiaIndex.ContemMateria("Quatro Operações"));
     }
 }
