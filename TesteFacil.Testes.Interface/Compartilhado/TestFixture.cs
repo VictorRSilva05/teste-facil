@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Remote;
 using System.Threading.Tasks;
 using Testcontainers.PostgreSql;
 using TesteFacil.Infraestrutura.Orm.Compartilhado;
@@ -17,7 +18,7 @@ public abstract class TestFixture
     protected static IWebDriver? driver;
     protected static TesteFacilDbContext? dbContext;
 
-    protected static string enderecoBase = "https://localhost:7056";
+    protected static string enderecoBase;
     private static string connectionString = "Host=localhost;Port=5432;Database=AcademiaDoProgramadorDb;Username=postgres;Password=YourStrongPassword";
 
     private static IDatabaseContainer? dbContainer;
@@ -25,6 +26,9 @@ public abstract class TestFixture
 
     private static IContainer? appContainer;
     private readonly static int appPort = 8080;
+
+    private static IContainer? seleniumContainer;
+    private readonly static int seleniumPort = 4444;
 
     private static IConfiguration? configuracao;
 
@@ -38,15 +42,19 @@ public abstract class TestFixture
 
         await InicializarBancoDadosAsync();
 
-        InicializarWebDriver();
+        await InicializarAplicacaoAsync();
+
+        InicializarWebDriverAsync();
     }
 
     [AssemblyCleanup]
     public static async Task EncerrarTestes()
     {
+        EncerrarWebDriverAsync();
+
         await EncerrarBancoDadosAsync();
 
-        EncerrarWebDriver();
+        await EncerrarAplicacaoAsync();
     }
 
     [TestInitialize]
@@ -97,13 +105,30 @@ public abstract class TestFixture
                 )
             .WithCleanUp(true)
             .Build();
+
+        await appContainer.StartAsync();
+
+        enderecoBase = $"http://{appContainer.Name}:{appPort}";
     }
-    private static void InicializarWebDriver()
+    private static async Task InicializarWebDriverAsync()
     {
+        seleniumContainer = new ContainerBuilder()
+            .WithImage("selenium/standalone-chrome:nightly")
+            .WithPortBinding(seleniumPort, true)
+            .WithName("teste-facil-selenium-e2e")
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilPortIsAvailable(seleniumPort)
+            )
+            .Build();
+
+        await seleniumContainer.StartAsync();
+
+        var enderecoSelenium = new Uri($"http://{seleniumContainer.Hostname}:{seleniumContainer.GetMappedPublicPort(seleniumPort)}/wd/hub");
+   
         var options = new FirefoxOptions();
         options.AddArgument("--headless=new");
 
-        driver = new FirefoxDriver(options);
+        driver = new RemoteWebDriver(enderecoSelenium,options);
     }
     
     private static async Task EncerrarBancoDadosAsync()
@@ -111,10 +136,20 @@ public abstract class TestFixture
         if(dbContainer is not null)
            await dbContainer.DisposeAsync();
     }
-    private static void EncerrarWebDriver()
+
+    private static async Task EncerrarAplicacaoAsync()
+    {
+        if (appContainer is not null)
+            await appContainer.DisposeAsync();
+    }
+
+    private static async Task EncerrarWebDriverAsync()
     {
         driver?.Quit();
         driver?.Dispose();
+
+        if (seleniumContainer is not null)
+            await seleniumContainer.DisposeAsync();
     }
 
     private static void ConfigurarTabelas(TesteFacilDbContext dbContext)
