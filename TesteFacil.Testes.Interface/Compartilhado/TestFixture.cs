@@ -40,17 +40,22 @@ public abstract class TestFixture
             .AddEnvironmentVariables()
             .Build();
 
-        await InicializarBancoDadosAsync();
+        var rede = new NetworkBuilder()
+            .WithName(Guid.NewGuid().ToString())
+            .WithCleanUp(true)
+            .Build();
 
-        await InicializarAplicacaoAsync();
+        await InicializarBancoDadosAsync(rede);
 
-        InicializarWebDriverAsync();
+        await InicializarAplicacaoAsync(rede);
+
+        await InicializarWebDriverAsync(rede);
     }
 
     [AssemblyCleanup]
     public static async Task EncerrarTestes()
     {
-        EncerrarWebDriverAsync();
+        await EncerrarWebDriverAsync();
 
         await EncerrarBancoDadosAsync();
 
@@ -65,12 +70,14 @@ public abstract class TestFixture
         ConfigurarTabelas(dbContext);
     }
 
-    private static async Task InicializarBancoDadosAsync()
+    private static async Task InicializarBancoDadosAsync(DotNet.Testcontainers.Networks.INetwork rede)
     {
         dbContainer = new PostgreSqlBuilder()
        .WithImage("postgres:16")
        .WithPortBinding(dbPort, true)
-       .WithName("teste-facil-testedb")
+       .WithNetwork(rede)
+       .WithNetworkAliases("teste-facil-e2e-testedb")
+       .WithName("teste-facil-e2e-testedb")
        .WithDatabase("TesteFacilTesteDb")
        .WithUsername("postgres")
        .WithPassword("YourStrongPassword")
@@ -81,7 +88,7 @@ public abstract class TestFixture
         await dbContainer.StartAsync();
     }
 
-    private static async Task InicializarAplicacaoAsync()
+    private static async Task InicializarAplicacaoAsync(DotNet.Testcontainers.Networks.INetwork rede)
     {
         var imagem = new ImageFromDockerfileBuilder()
             .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), string.Empty)
@@ -92,11 +99,17 @@ public abstract class TestFixture
 
         await imagem.CreateAsync().ConfigureAwait(false);
 
+        var connectionStringRede = dbContainer?.GetConnectionString()
+            .Replace(dbContainer.Hostname, "teste-facil-e2e-testdb")
+            .Replace(dbContainer.GetMappedPublicPort(5432).ToString(), "5432");
+
         appContainer = new ContainerBuilder()
             .WithImage(imagem)
             .WithPortBinding(appPort, true)
+            .WithNetwork(rede)
+            .WithNetworkAliases("teste-facil-webapp")
             .WithName("teste-facil-webapp")
-            .WithEnvironment("SQL_CONNECTION_STRING", configuracao["SQL_CONNECTION_STRING"])
+            .WithEnvironment("SQL_CONNECTION_STRING", connectionStringRede)
             .WithEnvironment("GEMINI_API_KEY", configuracao["GEMINI_API_KEY"])
             .WithEnvironment("NEWRELIC_LICENSE_KEY", configuracao["NEWRELIC_LICENSE_KEY"])
             .WithWaitStrategy(Wait.ForUnixContainer()
@@ -110,11 +123,13 @@ public abstract class TestFixture
 
         enderecoBase = $"http://{appContainer.Name}:{appPort}";
     }
-    private static async Task InicializarWebDriverAsync()
+    private static async Task InicializarWebDriverAsync(DotNet.Testcontainers.Networks.INetwork rede)
     {
         seleniumContainer = new ContainerBuilder()
             .WithImage("selenium/standalone-chrome:nightly")
             .WithPortBinding(seleniumPort, true)
+            .WithNetwork(rede)
+            .WithNetworkAliases("teste-facil-selenium-e2e")
             .WithName("teste-facil-selenium-e2e")
             .WithWaitStrategy(Wait.ForUnixContainer()
                 .UntilPortIsAvailable(seleniumPort)
@@ -126,7 +141,7 @@ public abstract class TestFixture
         var enderecoSelenium = new Uri($"http://{seleniumContainer.Hostname}:{seleniumContainer.GetMappedPublicPort(seleniumPort)}/wd/hub");
    
         var options = new FirefoxOptions();
-        options.AddArgument("--headless=new");
+        //options.AddArgument("--headless=new");
 
         driver = new RemoteWebDriver(enderecoSelenium,options);
     }
