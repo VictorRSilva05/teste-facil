@@ -14,26 +14,31 @@ public abstract class TestFixture
     protected static string enderecoBase = "https://localhost:7056";
     private static string connectionString = "Host=localhost;Port=5432;Database=AcademiaDoProgramadorDb;Username=postgres;Password=YourStrongPassword";
 
-    [TestInitialize]
-    public void ConfigurarTestes()
+    [AssemblyInitialize]
+    public static void ConfigurarTestes(TestContext _)
     {
-        dbContext = TesteFacilDbContextFactory.CriarDbContext(connectionString);
-
-        ConfigurarTabelas(dbContext);
-
         InicializarWebDriver();
     }
 
-    [TestCleanup]
-    public void EncerrarTestes()
+    [AssemblyCleanup]
+    public static void EncerrarTestes()
     {
         EncerrarWebDriver();
     }
 
+    [TestInitialize]
+    public void InicializarTestes()
+    {
+        dbContext = TesteFacilDbContextFactory.CriarDbContext(connectionString);
+
+        ConfigurarTabelas(dbContext);
+    }
+
+
     private static void InicializarWebDriver()
     {
         var options = new FirefoxOptions();
-        options.AddArgument("--headless");
+        options.AddArgument("--headless=new");
 
         driver = new FirefoxDriver(options);
     }
