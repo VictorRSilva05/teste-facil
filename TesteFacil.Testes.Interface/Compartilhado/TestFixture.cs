@@ -1,6 +1,7 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading.Tasks;
@@ -22,9 +23,19 @@ public abstract class TestFixture
     private static IDatabaseContainer? dbContainer;
     private readonly static int dbPort = 5432;
 
+    private static IContainer? appContainer;
+    private readonly static int appPort = 8080;
+
+    private static IConfiguration? configuracao;
+
     [AssemblyInitialize]
     public static async Task ConfigurarTestes(TestContext _)
     {
+        configuracao = new ConfigurationBuilder()
+            .AddUserSecrets<TestFixture>()
+            .AddEnvironmentVariables()
+            .Build();
+
         await InicializarBancoDadosAsync();
 
         InicializarWebDriver();
@@ -62,6 +73,31 @@ public abstract class TestFixture
         await dbContainer.StartAsync();
     }
 
+    private static async Task InicializarAplicacaoAsync()
+    {
+        var imagem = new ImageFromDockerfileBuilder()
+            .WithDockerfileDirectory(CommonDirectoryPath.GetSolutionDirectory(), string.Empty)
+            .WithDockerfile("Dockerfile")
+            .WithBuildArgument("RESOURCE_REAPER_SESSION_ID", ResourceReaper.DefaultSessionId.ToString("D"))
+            .WithName("teste-facil-app-e2e:latest")
+            .Build();   
+
+        await imagem.CreateAsync().ConfigureAwait(false);
+
+        appContainer = new ContainerBuilder()
+            .WithImage(imagem)
+            .WithPortBinding(appPort, true)
+            .WithName("teste-facil-webapp")
+            .WithEnvironment("SQL_CONNECTION_STRING", configuracao["SQL_CONNECTION_STRING"])
+            .WithEnvironment("GEMINI_API_KEY", configuracao["GEMINI_API_KEY"])
+            .WithEnvironment("NEWRELIC_LICENSE_KEY", configuracao["NEWRELIC_LICENSE_KEY"])
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilPortIsAvailable(appPort)
+                .UntilHttpRequestIsSucceeded(r => r.ForPort((ushort)appPort).ForPath("/health"))
+                )
+            .WithCleanUp(true)
+            .Build();
+    }
     private static void InicializarWebDriver()
     {
         var options = new FirefoxOptions();
