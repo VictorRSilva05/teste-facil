@@ -19,7 +19,6 @@ public abstract class TestFixture
     protected static TesteFacilDbContext? dbContext;
 
     protected static string enderecoBase;
-    private static string connectionString = "Host=localhost;Port=5432;Database=AcademiaDoProgramadorDb;Username=postgres;Password=YourStrongPassword";
 
     private static IDatabaseContainer? dbContainer;
     private readonly static int dbPort = 5432;
@@ -65,7 +64,7 @@ public abstract class TestFixture
     [TestInitialize]
     public void InicializarTestes()
     {
-        dbContext = TesteFacilDbContextFactory.CriarDbContext(connectionString);
+        dbContext = TesteFacilDbContextFactory.CriarDbContext(dbContainer.GetConnectionString());
 
         ConfigurarTabelas(dbContext);
     }
