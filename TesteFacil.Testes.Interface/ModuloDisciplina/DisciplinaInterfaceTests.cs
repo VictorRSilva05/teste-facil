@@ -42,7 +42,7 @@ public sealed class DisciplinaInterfaceTests : TestFixture
         // Act
         indexPageObject
             .ClickEditar()
-            .PreencherNome("Matemática Editada")
+            .PreencherNome(" Editada")
             .Confirmar();
 
         // Assert

@@ -16,14 +16,14 @@ public sealed class MateriaInterfaceTests : TestFixture
         var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
 
         disciplinaIndex
-            .IrPara(enderecoBase)
+            .IrPara(enderecoBase!)
             .ClickCadastrar()
             .PreencherNome("Matemática")
             .Confirmar();
 
         // Act
         var materiaIndex = new MateriaIndexPageObject(driver!)
-            .IrPara(enderecoBase);
+            .IrPara(enderecoBase!);
 
         materiaIndex
             .ClickCadastrar()
@@ -41,13 +41,13 @@ public sealed class MateriaInterfaceTests : TestFixture
     {
         // Arrange
         new DisciplinaIndexPageObject(driver!)
-            .IrPara(enderecoBase)
+            .IrPara(enderecoBase!)
             .ClickCadastrar()
             .PreencherNome("Matemática")
             .Confirmar();
 
         var materiaIndex = new MateriaIndexPageObject(driver!)
-            .IrPara(enderecoBase);
+            .IrPara(enderecoBase!);
 
         materiaIndex
             .ClickCadastrar()
@@ -73,13 +73,13 @@ public sealed class MateriaInterfaceTests : TestFixture
     {
         // Arrange
         new DisciplinaIndexPageObject(driver!)
-            .IrPara(enderecoBase)
+            .IrPara(enderecoBase!)
             .ClickCadastrar()
             .PreencherNome("Matemática")
             .Confirmar();
 
         var materiaIndex = new MateriaIndexPageObject(driver!)
-            .IrPara(enderecoBase);
+            .IrPara(enderecoBase!);
 
         materiaIndex
             .ClickCadastrar()
