@@ -15,7 +15,7 @@ public sealed class DisciplinaInterfaceTests : TestFixture
         var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
 
         disciplinaIndex
-            .IrPara(enderecoBase);
+            .IrPara(enderecoBase!);
 
         // Act
         disciplinaIndex
@@ -56,7 +56,7 @@ public sealed class DisciplinaInterfaceTests : TestFixture
         var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
 
         disciplinaIndex
-           .IrPara(enderecoBase)
+           .IrPara(enderecoBase!)
            .ClickCadastrar()
            .PreencherNome("Matemática")
            .Confirmar();
