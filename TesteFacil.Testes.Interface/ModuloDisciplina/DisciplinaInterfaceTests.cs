@@ -31,24 +31,22 @@ public sealed class DisciplinaInterfaceTests : TestFixture
     public void Deve_Editar_Disciplina_Corretamente()
     {
         // Arrange
-        var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(5));
+        var indexPageObject = new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase!);
 
-        var disciplinaIndex = new DisciplinaIndexPageObject(driver!);
-
-        disciplinaIndex
-               .IrPara(enderecoBase)
-               .ClickCadastrar()
-               .PreencherNome("Matemática")
-               .Confirmar();
+        indexPageObject
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
         // Act
-        disciplinaIndex
-           .ClickEditar()
-           .PreencherNome("Matemática Editada")
-           .Confirmar();
+        indexPageObject
+            .ClickEditar()
+            .PreencherNome("Matemática Editada")
+            .Confirmar();
 
         // Assert
-        Assert.IsTrue(disciplinaIndex.ContemDisciplina("Matemática Editada"));
+        Assert.IsTrue(indexPageObject.ContemDisciplina("Matemática Editada"));
     }
 
     [TestMethod]
